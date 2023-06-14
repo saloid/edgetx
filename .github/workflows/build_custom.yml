@@ -1,0 +1,56 @@
+---
+name: Build and deploy nightly release
+on: push
+
+concurrency: 
+  group: 'nightly'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build firmware
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - nv14
+          - t12
+          - t16
+          - t18
+          - t8;zorro;commando8
+          - tlite;tlitef4;tpro;lr3pro
+          - tx12;tx12mk2;boxer
+          - tx16s
+          - x10;x10-access
+          - x12s
+          - x7;x7-access
+          - x9d;x9dp;x9dp2019
+          - x9e;x9e-hall
+          - x9lite;x9lites
+          - xlite;xlites
+    container:
+      image: ghcr.io/edgetx/edgetx-dev:latest
+      volumes:
+        - ${{ github.workspace }}:/src
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Build firmware ${{ matrix.target }}
+        env:
+          FLAVOR: ${{ matrix.target }}
+          EDGETX_VERSION_SUFFIX: nightly
+        run: ./tools/build-gh.sh
+
+      - name: Package firmware ${{ matrix.target }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: edgetx-firmware-nightly
+          path: |
+            fw.json
+            LICENSE
+            *.bin
+          retention-days: 15
+          if-no-files-found: error
