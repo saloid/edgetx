@@ -1,5 +1,5 @@
 ---
-name: Build and deploy nightly release
+name: Build on push
 on: push
 
 concurrency: 
